@@ -1,0 +1,212 @@
+Cub3d STEPS :
+	I : Parser le fichier .cub
+	II : Minilibx setup
+	III : Minimap a faire pour bien utiliser la Minilibx
+	IV : Key input dans la Minimap 
+	V : Le raycasting sans textures dans la pratique
+	VI : Ajouter les textures
+	VII : Les Sprites
+	VIII : Les derniers petits éléments
+	IX : Les leaks
+	X : Bonus list
+
+
+
+I. Parsing .cub
+
+A faire :
+
+	1 :  Parser dans un tableau de char à double entrée.
+
+	2 :  Checker que la map soit entourée de murs
+
+	3 :  A chaque fois faire passer par la fonction qui vérifie que les caractères 
+			de la map sont bien des 0,1,2
+
+	4 :  A chaque fois faire passer par la fonction qui vérifie s'il y a bien le joueur dans la map 
+			(donc si y a N,S,E ou W) et si le joueur est là remplacer par 0 et 
+			retenir dans une variable la position et la direction du joueur
+
+	5 :  Faire un tableau de chaînes de caractères
+
+	6 :  J'ai ajouté des 1 avant ou après pour que toutes les lignes soit de la taille 
+			de la ligne la plus grande
+
+	7 :  Pour le malloc de map** je read une première fois pour trouver la taille de la chaîne 
+			la plus longue de la map + le nombre de chaînes qu’il y a dans la map
+
+	8 :  Malloquer le tableau avec le nombre de char * qu’il y a dedans
+
+	9 :  Malloquer ensuite chaine de caractère par chaîne de caractères dans le tableau
+
+	10 : Remplacer tous les espaces par des murs 
+		+ ajouter des murs au bout pour que la taille de la chaîne soit suffisamment grande
+		(voir map qui marche dans /maps/working.cub)
+	
+	11 : Check les trucs chiant dans Chiant.txt
+
+II. Minilibx setup
+
+A faire :
+
+	1 : Inclure dans l'executable (Makefile)
+	
+	2 : 
+
+
+III. Minimap
+
+A faire :
+
+	1 : Utiliser le parsing que j’ai fait dans mon char** map pour créer une minimap avec les 0, les 1 et les 2 chacun d'une couleur
+	2 : Faire un pixel = 10 pixels pour qu’on voit correctement la minimap
+	3 : Pouvoir faire bouger mon personnage avec les flèches dans la minimap (voir les keys à l'étape IV)
+	4 : Checker si le case sur laquelle je vais me déplacer est un mur ou pas (si == ‘0’) : si oui je peux me déplacer dessus, sinon non
+
+Fonction necessaire :
+
+	mlx_init, mlx_new_window, et mlx_loop = init
+	mlx_hook qui tourne pour les key_press et les key_release qui permet de récupérer si une touche est appuyée ou non (voir étape 4)
+	mlx_get_data_addr pour récupérer l'adresse de l'image et écrire des pixels dedans
+	mlx_loop_hook avec à l'intérieur de ta fonction qui imprime la minimap pour que dès qu'il y a une key press la minimap s'adapte
+	mlx_put_image_to_window
+
+IV. Key inputs
+
+A faire :
+
+	1 : Appuyer sur escape et que ca quitte proprement (pour que ca quitte proprement utiliser exit(0))
+	2 : Appuyer sur flèche de gauche : rotation gauche
+	3 : Appuyer sur flèche de droite : rotation droite
+	4 : Appuyer sur W : avance 
+	5 : Appuyer sur S : recule
+	6 : Appuyer sur A : déplace à gauche
+	7 : Appuyer sur D : déplace à droite
+	8 : Voir sur Keys.txt pour les key codes et event.
+
+V. Raycasting
+
+1 : Principe de base :
+
+	On envoie des rayon de gauche à droite depuis la position du joueur. 
+	Sachant que au lieu de lancer un rayon pour chaque pixel nous allons lancer un rayon par colonne. 
+	On lance autant de rayons que rx (résolution x).
+	Plus le rayon met du temps à atteindre le mur, plus il est loin. 
+	On calcule la distance du joueur au mur pour chaque rayon.
+	Plus la distance au mur est grande plus la colonne de pixels est petite.
+
+2 : Variable de la doc raycasting :
+
+typedef struct	s_ray
+{
+	double		posx; //position x du joueur
+	double		posy; //position y du joueur
+	double		dirx; //vecteur de direction (commence à -1 pour N, 1 pour S, 0 sinon)
+	double		diry; //vecteur de direction (commence à -1 pour W, 1 pour E, 0 sinon)
+	double		planx; //vecteur du plan (commence à 0.66 pour E, -0.66 pour W, 0 sinon)
+	double		plany; //vecteur du plan (commence à 0.66 pour N, -0.66 pour S, 0 sinon)
+	double		raydirx; //calcul de direction x du rayon
+	double		raydiry; //calcul de direction y du rayon
+	double		camerax; //point x sur la plan camera : Gauche ecran = -1, milieu = 0, droite = 1
+	int		mapx; // coordonée x du carré dans lequel est pos
+	int		mapy; // coordonnée y du carré dans lequel est pos
+	double		sidedistx; //distance que le rayon parcours jusqu'au premier point d'intersection vertical (=un coté x)
+	double		sidedisty; //distance que le rayon parcours jusqu'au premier point d'intersection horizontal (= un coté y)
+	double		deltadistx; //distance que rayon parcours entre chaque point d'intersection vertical
+	double		deltadisty; //distance que le rayon parcours entre chaque point d'intersection horizontal
+	int		stepx; // -1 si doit sauter un carre dans direction x negative, 1 dans la direction x positive
+	int		stepy; // -1 si doit sauter un carre dans la direction y negative, 1 dans la direction y positive
+	int		hit; // 1 si un mur a ete touche, 0 sinon
+	int		side; // 0 si c'est un cote x qui est touche (vertical), 1 si un cote y (horizontal)
+	double		perpwalldist; // distance du joueur au mur
+	int		lineheight; //hauteur de la ligne a dessiner
+	int		drawstart; //position de debut ou il faut dessiner
+	int		drawend; //position de fin ou il faut dessiner
+	int		x; //permet de parcourir tous les rayons
+}					t_ray;
+
+
+3. Calculs
+
+Pour chaque rayon ray.x on va :
+
+	Calculer stepx, stepy, sidedistx et sidedisty
+	Incrémenter tant qu'on a pas touche un mur : on passe au carre suivant soit dans la direction x soit direction y 
+	Ici il faut savoir que l'on va d'abord jusqu'au premier point d'intersection en parcourant une distance sidedistx et sidedisty. 
+	Puis on incrémente toujours de la même valeur : deltadistx et deltadisty
+	On calcule perpwalldist pour avoir lineheight, puis drawstart et drawend
+abs = valeur absolue d’un nombre, sqrt = racine d’un nombre.
+
+• Imprimer la colonne de pixels
+• Adapter posx et posy aux mouvements droite gauche, avancer reculer
+
+ft_forward_back(recup);
+ft_left_right(recup);
+
+• Adapter dirx, diry et planx, plany aux rotations droite et gauche
+
+• ft_rotate_right_left(recup);
+• Si ca lagge, swapper entre deux images
+• C'est à dire swapper data.img et data.img2, data.addr et data.addr2
+
+VI : Textures
+
+Récuperer la texture dans une image texture[0].img. Puis récupérer la couleur d'un pixel à (texx;texy) dans cette image afin de mettre la même couleur dans notre image de base data.img.
+
+Les textures doivent être au format xpm. Celles-ci seront récupérées grâce à la fonction mlx_xpm_file_to_image. Penser à protéger sa fonction si le xpm est mauvais !
+
+if (!(recup->texture[0].img = mlx_xpm_file_to_image(recup->data.mlx_ptr,
+	recup->no, &(recup->texture[0].width), &(recup->texture[0].height))))
+	ft_error(recup, "Texture SO\n");
+
+
+
+L'objectif est de récupérer la couleur du pixel à (texx;texy) de la texture pour imprimer la même couleur dans notre image à (x;y). 
+	Il faudra récupérer l'adresse de cette image dans le pointeur texture[0].addr avec mlx_get_data_address, calculer texx et texy.
+
+texture[0].addr = (int *)mlx_get_data_addr(texture[0].img, &texture[0].bits_per_pixel, &texture[0].line_length, &texture[0].endian);
+data.addr[y * recup->data.line_length / 4 + x] = texture[0].addr[texy * texture[0].line_length / 4 + texx];
+
+Variable : 
+	int		texdir; //direction NO, S, EA, WE de la texture
+	double		wallx; // valeur où le mur a été touché : coordonnée y si side == 0, coordonnée x si side == 1
+	int		texx; // coordonnée x de la texture
+	int		texy; // coordonée y de la texture
+	double		step; // indique de combien augmenter les coordonnées de la texture pour chaque pixel
+	double		texpos; // coordonnée de départ
+
+VII : Sprites 
+
+	======SO_LONG
+
+VIII : Derniers elements
+
+1 : quitter le programme proprement quand j’appuie sur la croix 
+		mlx_hook(recup->data.mlx_win, 33, 1L << 17, ft_exit, recup);
+
+2 : si la taille de la fenêtre est supérieure à celle de l'écran, la taille de la fenêtre doit être celle de l'écran : fonction spéciale mlx_get_screen_size.
+	mlx_get_screen_size(recup->data.mlx_ptr, &recup->screenx, &recup->screeny);
+	recup->rx = (recup->rx > recup->screenx) ? recup->screenx : recup->rx;
+	recup->ry = (recup->ry > recup->screeny) ? recup->screeny : recup->ry;
+
+IX : Leaks
+
+Sache que le definitely lost doit etre a 0. Still reachable doit être à environ 100 blocks. Pourquoi still reachable ? Car la minilibx crée des leaks. 
+Pour voir si le leak est chez toi ou dans la minilibx : valgrind --leak-check=full --show-leak-kinds=all ./executable description.cub. 
+La petite technique c’est de rajouter 2> leak.log pour que tous les leaks soient dans un fichier, pour plus de lisibilité :  
+	valgrind --leak-check=full --show-leak-kinds=all ./executable description.cub 2> leak.log
+
+X : Bonus list
+
+• Collision contre les murs
+• Un système de minicarte.
+• Porte qui peuvent être ouvertes/fermées.
+• Animations (des sprites animés).
+• Faites pivoter le point de vue avec la souris.
+
+***Dans le cadre des bonus, vous êtes autorisé à utiliser d’autres
+fonctions ou à ajouter des symboles sur la carte pour compléter
+la partie bonus tant que leur utilisation est justifiée lors de
+votre évaluation. Vous êtes également autorisé à modifier le format
+de fichier de scène attendu pour l’adapter à vos besoins. Soyez
+intelligent ! ***
