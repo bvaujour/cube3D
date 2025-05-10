@@ -1,6 +1,7 @@
 # cub3d
+[Voir le sujet](./subject.pdf)
 
-Projet de niveau 4 de l'école 42.
+Projet de niveau 5 de l'école 42.
 
 Création d’un moteur de rendu en pseudo 3D basé sur le raycasting, inspiré du jeu Wolfenstein 3D. Le joueur peut se déplacer dans un labyrinthe vu à la première personne, avec gestion des murs, textures et collisions.
 
@@ -12,9 +13,8 @@ Le projet utilise **MiniLibX**, une petite bibliothèque graphique développée 
 - **Textures :** Affichage de textures sur les murs.
 - **Déplacement libre :** Mouvements avant/arrière, gauche/droite, et rotation de la vue.
 - **Gestion des collisions :** Empêche le joueur de traverser les murs.
-- **Minimap (optionnel) :** Affichage en vue du dessus du niveau.
+- **Minimap (Bonus) :** Affichage en vue du dessus du niveau.
 
-[Voir le sujet](./subject.pdf)
 
 ![capture d'écran](./Screenshot.png)
 
