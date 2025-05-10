@@ -29,6 +29,4 @@ sudo apt-get update && sudo apt-get install xorg libxext-dev zlib1g-dev libbsd-d
 
 ## Dans le repo:
 
-make bonus
-
-./cub3D_bonus maps_bonus/corridor.cub
+make bonus && ./cub3D_bonus maps_bonus/corridor.cub
