@@ -20,3 +20,11 @@ Le projet utilise **MiniLibX**, une petite bibliothèque graphique développée 
 
 ### Aperçu en vidéo :
 ![animation du jeu](Screencast_cube.gif)
+
+Utilisation:
+
+### Dépendances MinilibX:
+sudo apt-get update && sudo apt-get install xorg libxext-dev zlib1g-dev libbsd-dev
+
+make bonus
+./cub3D_bonus maps_bonus/corridor.cub
